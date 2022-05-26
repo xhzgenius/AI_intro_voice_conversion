@@ -6,8 +6,11 @@ XHZGenius
 
 ### 写在前面
 
-其实英文好的同学看README.md就够了。但那里面没有各个模块的说明，那我简单解释一下。
+新的convert命令：
 
+python preprocess.py --origin_wavpath ./convertFolder/wav --target_wavpath ./convertFolder/wav16 --mc_dir_train ./convertFolder/data --mc_dir_test ./convertFolder/data --i_vector_dir ./convertFolder/data/i_vector
+
+到时候UI就把源音频1放在./convertFolder/wav/SEF1，源音频2放在./convertFolder/wav/SEF2
 
 
 ##### 环境依赖

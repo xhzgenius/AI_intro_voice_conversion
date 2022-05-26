@@ -1,5 +1,7 @@
+from tokenize import Double
 from model import Generator
 from model import Discriminator
+from model import DEBUG, USE_I_VECTOR
 from torch.autograd import Variable
 from torchvision.utils import save_image
 import torch
@@ -13,10 +15,25 @@ from data_loader import to_categorical
 import librosa
 from utils import *
 from tqdm import tqdm
+from data_loader import spk2idx, speakers
+import random
+
 
 
 class Solver(object):
     """Solver for training and testing StarGAN."""
+    
+    def random_choose_i_vector(self, speaker_label_list):
+        i_vector_list = []
+        for i in speaker_label_list:
+            spk_name = speakers[i]
+            folder_path = join(self.i_vector_dir, spk_name)
+            lst = os.listdir(folder_path)
+            i_vector_list.append(np.load(join(folder_path, random.choice(lst))))
+        result = torch.FloatTensor(np.array(i_vector_list))
+        if(DEBUG):
+            print("根据speaker的label随机选出的i-vector: ", result)
+        return result
 
     def __init__(self, train_loader, test_loader, config):
         """Initialize configurations."""
@@ -55,6 +72,7 @@ class Solver(object):
         self.log_dir = config.log_dir
         self.sample_dir = config.sample_dir
         self.model_save_dir = config.model_save_dir
+        self.i_vector_dir = config.i_vector_dir
 
         # Step size.
         self.log_step = config.log_step
@@ -141,6 +159,8 @@ class Solver(object):
         return out
 
     def sample_spk_c(self, size):
+        '''返回两个东西，前一个是说话人标签（int），后一个是说话人标签对应的one-hot矩阵
+        '''
         spk_c = np.random.randint(0, self.num_speakers, size=size)
         spk_c_cat = to_categorical(spk_c, self.num_speakers)
         return torch.LongTensor(spk_c), torch.FloatTensor(spk_c_cat)
@@ -194,12 +214,32 @@ class Solver(object):
             except:
                 data_iter = iter(train_loader)
                 mc_real, spk_label_org, spk_c_org = next(data_iter)
-
+                
             mc_real.unsqueeze_(1) # (B, D, T) -> (B, 1, D, T) for conv2d
 
             # Generate target domain labels randomly.
             # spk_label_trg: int,   spk_c_trg:one-hot representation 
             spk_label_trg, spk_c_trg = self.sample_spk_c(mc_real.size(0)) 
+            # spk_label_trg是目标说话人标签(int)。spk_c_trg是目标说话人的one-hot向量。
+            
+            if(DEBUG):
+                print("data_loader迭代出的一次训练数据: ")
+                print("mc_real: ", mc_real.size(), mc_real)
+                print("spk_label_org: ", spk_label_org.size(), spk_label_org)
+                print("spk_c_org: ", spk_c_org.size(), spk_c_org)
+                print("spk_label_trg: ", spk_label_trg.size(), spk_label_trg)
+                print("spk_c_trg: ", spk_c_trg.size(), spk_c_trg)
+            # mc_real是声音数据，是从文件读入的numpy数组
+            # spk_label_org是说话人标签(int)。仅仅用于Discriminator的训练。
+            # spk_c_org是one-hot的说话人标签
+            
+            if(USE_I_VECTOR):
+                # spk_c_org和spk_c_trg都改成对应说话人的（随机选一个语音得到的）i-vector
+                spk_c_org = self.random_choose_i_vector(spk_label_org)
+                spk_c_trg = self.random_choose_i_vector(spk_label_trg)
+                if(DEBUG):
+                    print("将原先的one-hot矩阵替换为了i-vector列表。")
+            
 
             mc_real = mc_real.to(self.device)                         # Input mc.
             spk_label_org = spk_label_org.to(self.device)             # Original spk labels.
@@ -220,7 +260,7 @@ class Solver(object):
             
 
             # Compute loss with fake mc feats.
-            mc_fake = self.G(mc_real, spk_c_trg)
+            mc_fake = self.G(mc_real, spk_c_trg) # 要改G的输入
             out_src, out_cls_spks = self.D(mc_fake.detach())
             d_loss_fake = torch.mean(out_src)
             # 此项损失函数代表：假的语音被判断为真的惩罚项（居然是线性的而不是交叉熵？！）
@@ -252,7 +292,7 @@ class Solver(object):
             
             if (i+1) % self.n_critic == 0:
                 # Original-to-target domain.
-                mc_fake = self.G(mc_real, spk_c_trg)
+                mc_fake = self.G(mc_real, spk_c_trg) # 要改G的输入
                 out_src, out_cls_spks = self.D(mc_fake)
                 g_loss_fake = - torch.mean(out_src)
                 # 此项损失函数代表：生成的语音被Discriminator判断为假的惩罚项
@@ -260,7 +300,7 @@ class Solver(object):
                 # 此项损失函数（classification）代表：生成的语音被Discriminator识别错类而产生的惩罚项
 
                 # Target-to-original domain.
-                mc_reconst = self.G(mc_fake, spk_c_org)
+                mc_reconst = self.G(mc_fake, spk_c_org) # 要改G的输入
                 g_loss_rec = torch.mean(torch.abs(mc_real - mc_reconst))
                 # 此项损失函数（reconstruction）代表：把原语音生成的假语音再转换回原来说话者，和原语音的误差
 
@@ -293,38 +333,38 @@ class Solver(object):
                     for tag, value in loss.items():
                         self.logger.scalar_summary(tag, value, i+1)
 
-            if (i+1) % self.sample_step == 0:
-                sampling_rate=16000
-                num_mcep=36
-                frame_period=5
-                with torch.no_grad():
-                    for idx, wav in tqdm(enumerate(test_wavs)):
-                        wav_name = basename(test_wavfiles[idx])
-                        # print(wav_name)
-                        f0, timeaxis, sp, ap = world_decompose(wav=wav, fs=sampling_rate, frame_period=frame_period)
-                        f0_converted = pitch_conversion(f0=f0, 
-                            mean_log_src=self.test_loader.logf0s_mean_src, std_log_src=self.test_loader.logf0s_std_src, 
-                            mean_log_target=self.test_loader.logf0s_mean_trg, std_log_target=self.test_loader.logf0s_std_trg)
-                        coded_sp = world_encode_spectral_envelop(sp=sp, fs=sampling_rate, dim=num_mcep)
+            # if (i+1) % self.sample_step == 0: # 用模型进行语音转换的代码，可以参考
+            #     sampling_rate=16000
+            #     num_mcep=36
+            #     frame_period=5
+            #     with torch.no_grad():
+            #         for idx, wav in tqdm(enumerate(test_wavs)):
+            #             wav_name = basename(test_wavfiles[idx])
+            #             # print(wav_name)
+            #             f0, timeaxis, sp, ap = world_decompose(wav=wav, fs=sampling_rate, frame_period=frame_period)
+            #             f0_converted = pitch_conversion(f0=f0, 
+            #                 mean_log_src=self.test_loader.logf0s_mean_src, std_log_src=self.test_loader.logf0s_std_src, 
+            #                 mean_log_target=self.test_loader.logf0s_mean_trg, std_log_target=self.test_loader.logf0s_std_trg)
+            #             coded_sp = world_encode_spectral_envelop(sp=sp, fs=sampling_rate, dim=num_mcep)
                         
-                        coded_sp_norm = (coded_sp - self.test_loader.mcep_mean_src) / self.test_loader.mcep_std_src
-                        coded_sp_norm_tensor = torch.FloatTensor(coded_sp_norm.T).unsqueeze_(0).unsqueeze_(1).to(self.device)
-                        conds = torch.FloatTensor(self.test_loader.spk_c_trg).to(self.device)
-                        # print(conds.size())
-                        coded_sp_converted_norm = self.G(coded_sp_norm_tensor, conds).data.cpu().numpy()
-                        coded_sp_converted = np.squeeze(coded_sp_converted_norm).T * self.test_loader.mcep_std_trg + self.test_loader.mcep_mean_trg
-                        coded_sp_converted = np.ascontiguousarray(coded_sp_converted)
-                        # decoded_sp_converted = world_decode_spectral_envelop(coded_sp = coded_sp_converted, fs = sampling_rate)
-                        wav_transformed = world_speech_synthesis(f0=f0_converted, coded_sp=coded_sp_converted, 
-                                                                ap=ap, fs=sampling_rate, frame_period=frame_period)
+            #             coded_sp_norm = (coded_sp - self.test_loader.mcep_mean_src) / self.test_loader.mcep_std_src
+            #             coded_sp_norm_tensor = torch.FloatTensor(coded_sp_norm.T).unsqueeze_(0).unsqueeze_(1).to(self.device)
+            #             conds = torch.FloatTensor(self.test_loader.spk_c_trg).to(self.device)
+            #             # print(conds.size())
+            #             coded_sp_converted_norm = self.G(coded_sp_norm_tensor, conds).data.cpu().numpy() # 这里要改G的输入
+            #             coded_sp_converted = np.squeeze(coded_sp_converted_norm).T * self.test_loader.mcep_std_trg + self.test_loader.mcep_mean_trg
+            #             coded_sp_converted = np.ascontiguousarray(coded_sp_converted)
+            #             # decoded_sp_converted = world_decode_spectral_envelop(coded_sp = coded_sp_converted, fs = sampling_rate)
+            #             wav_transformed = world_speech_synthesis(f0=f0_converted, coded_sp=coded_sp_converted, 
+            #                                                     ap=ap, fs=sampling_rate, frame_period=frame_period)
                         
-                        librosa.output.write_wav(
-                            join(self.sample_dir, str(i+1)+'-'+wav_name.split('.')[0]+'-vcto-{}'.format(self.test_loader.trg_spk)+'.wav'), wav_transformed, sampling_rate)
-                        if cpsyn_flag:
-                            wav_cpsyn = world_speech_synthesis(f0=f0, coded_sp=coded_sp, 
-                                                        ap=ap, fs=sampling_rate, frame_period=frame_period)
-                            librosa.output.write_wav(join(self.sample_dir, 'cpsyn-'+wav_name), wav_cpsyn, sampling_rate)
-                    cpsyn_flag = False
+            #             librosa.output.write_wav(
+            #                 join(self.sample_dir, str(i+1)+'-'+wav_name.split('.')[0]+'-vcto-{}'.format(self.test_loader.trg_spk)+'.wav'), wav_transformed, sampling_rate)
+            #             if cpsyn_flag:
+            #                 wav_cpsyn = world_speech_synthesis(f0=f0, coded_sp=coded_sp, 
+            #                                             ap=ap, fs=sampling_rate, frame_period=frame_period)
+            #                 librosa.output.write_wav(join(self.sample_dir, 'cpsyn-'+wav_name), wav_cpsyn, sampling_rate)
+            #         cpsyn_flag = False
 
             # Save model checkpoints.
             if (i+1) % self.model_save_step == 0:

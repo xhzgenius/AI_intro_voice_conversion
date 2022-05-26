@@ -14,17 +14,16 @@ from utils import *
 import glob
 
 # Below is the accent info for the used 10 speakers.
-spk2acc = {'262': 'Edinburgh', #F
-           '272': 'Edinburgh', #M
-           '229': 'SouthEngland', #F 
-           '232': 'SouthEngland', #M
-           '292': 'NorthernIrishBelfast', #M 
-           '293': 'NorthernIrishBelfast', #F 
-           '360': 'AmericanNewJersey', #M
-           '361': 'AmericanNewJersey', #F
-           '248': 'India', #F
-           '251': 'India'} #M
-
+# spk2acc = {'262': 'Edinburgh', #F
+#            '272': 'Edinburgh', #M
+#            '229': 'SouthEngland', #F 
+#            '232': 'SouthEngland', #M
+#            '292': 'NorthernIrishBelfast', #M 
+#            '293': 'NorthernIrishBelfast', #F 
+#            '360': 'AmericanNewJersey', #M
+#            '361': 'AmericanNewJersey', #F
+#            '248': 'India', #F
+#            '251': 'India'} #M
 # speakers = ['p262', 'p272', 'p229', 'p232', 'p292', 'p293', 'p360', 'p361', 'p248', 'p251']
 speakers = ["SEF1", "SEF2", "SEM1", "SEM2"] #
 spk2idx = dict(zip(speakers, range(len(speakers))))
@@ -59,6 +58,8 @@ class TestDataset(object):
 
 
     def get_batch_test_data(self, batch_size=4):
+        '''返回一个文件路径的列表
+        '''
         batch_data = []
         for i in range(batch_size):
             mcfile = self.mc_files[i]
@@ -90,6 +91,8 @@ def test(config):
     # Read a batch of testdata
     test_wavfiles = test_loader.get_batch_test_data(batch_size=config.num_converted_wavs)
     test_wavs = [load_wav(wavfile, sampling_rate) for wavfile in test_wavfiles]
+    
+    i_vector = np.load()
 
     with torch.no_grad():
         for idx, wav in enumerate(test_wavs):
@@ -106,7 +109,10 @@ def test(config):
             coded_sp_norm_tensor = torch.FloatTensor(coded_sp_norm.T).unsqueeze_(0).unsqueeze_(1).to(device)
             spk_conds = torch.FloatTensor(test_loader.spk_c_trg).to(device)
             # print(spk_conds.size())
+            
+            # coded_sp_converted_norm = G(coded_sp_norm_tensor, spk_conds).data.cpu().numpy()
             coded_sp_converted_norm = G(coded_sp_norm_tensor, spk_conds).data.cpu().numpy()
+            
             coded_sp_converted = np.squeeze(coded_sp_converted_norm).T * test_loader.mcep_std_trg + test_loader.mcep_mean_trg
             coded_sp_converted = np.ascontiguousarray(coded_sp_converted)
             print("After being fed into G: ", coded_sp_converted.shape)
@@ -127,21 +133,21 @@ if __name__ == '__main__':
     # Model configuration.
     # parser.add_argument('--num_speakers', type=int, default=10, help='dimension of speaker labels')
     parser.add_argument('--num_speakers', type=int, default=4, help='dimension of speaker labels') #
-    parser.add_argument('--num_converted_wavs', type=int, default=8, help='number of wavs to convert.')
+    parser.add_argument('--num_converted_wavs', type=int, default=1, help='number of wavs to convert.')
     parser.add_argument('--resume_iters', type=int, default=None, help='step to resume for testing.')
     # parser.add_argument('--src_spk', type=str, default='p262', help = 'source speaker.')
     parser.add_argument('--src_spk', type=str, default='SEF1', help = 'source speaker.') #
     # parser.add_argument('--trg_spk', type=str, default='p272', help = 'target speaker.')
-    parser.add_argument('--trg_spk', type=str, default='SEM2', help = 'target speaker.') #
+    parser.add_argument('--trg_spk', type=str, default='SEF2', help = 'target speaker.') #
 
     # Directories.
-    parser.add_argument('--train_data_dir', type=str, default='./data/mc/train')
-    parser.add_argument('--test_data_dir', type=str, default='./data/mc/test')
-    # parser.add_argument('--wav_dir', type=str, default="./data/VCTK-Corpus/wav16")
-    parser.add_argument('--wav_dir', type=str, default="./data/source/wav16")
+    parser.add_argument('--train_data_dir', type=str, default='./convertFolder/data')
+    parser.add_argument('--test_data_dir', type=str, default='./convertFolder/data')
+    parser.add_argument('--wav_dir', type=str, default="./convertFolder/wav")
+    # parser.add_argument('--wav_dir', type=str, default="./data/source/wav16")
     parser.add_argument('--log_dir', type=str, default='./logs')
     parser.add_argument('--model_save_dir', type=str, default='./models')
-    parser.add_argument('--convert_dir', type=str, default='./converted')
+    parser.add_argument('--convert_dir', type=str, default='./convertFolder')
 
 
     config = parser.parse_args()

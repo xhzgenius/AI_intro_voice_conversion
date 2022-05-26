@@ -4,6 +4,11 @@ import torch.nn.functional as F
 import numpy as np
 # from data_loader import get_loader
 
+DEBUG = False
+# DEBUG = True
+# USE_I_VECTOR = False
+USE_I_VECTOR = True
+
 
 class ResidualBlock(nn.Module):
     """Residual Block with instance normalization."""
@@ -23,7 +28,10 @@ class Generator(nn.Module):
     """Generator network."""
     def __init__(self, conv_dim=64, num_speakers=10, repeat_num=6):
         super(Generator, self).__init__()
-        c_dim = num_speakers
+        if(USE_I_VECTOR):
+            c_dim = 512 # 输入不是one-hot了，而是512维的i-vector，直接接在1*36*256的声音数组后面
+        else:
+            c_dim = num_speakers # 输入是大小为num_speaker*36*256的，复制了很多份的one-hot
         layers = []
         layers.append(nn.Conv2d(1+c_dim, conv_dim, kernel_size=(3, 9), padding=(1, 4), bias=False))
         layers.append(nn.InstanceNorm2d(conv_dim, affine=True, track_running_stats=True))
@@ -51,11 +59,19 @@ class Generator(nn.Module):
         layers.append(nn.Conv2d(curr_dim, 1, kernel_size=7, stride=1, padding=3, bias=False))
         self.main = nn.Sequential(*layers)
 
-    def forward(self, x, c):
+    def forward(self, x, c): # x是源语音，c是目标说话人的标签（one-hot）。到时候把c改成目标语音的i-vector。
         # Replicate spatially and concatenate domain information.
+        if(DEBUG):
+            print("原始输入模型的参数x: ", x.size())
+            print(x)
+            print("原始输入模型的参数c: ", c.size())
+            print(c)
         c = c.view(c.size(0), c.size(1), 1, 1)
         c = c.repeat(1, 1, x.size(2), x.size(3))
         x = torch.cat([x, c], dim=1)
+        if(DEBUG):
+            print("实际输入模型的参数x: ", x.size())
+            print(x)
         return self.main(x)
 
 class Discriminator(nn.Module):
