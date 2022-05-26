@@ -131,13 +131,13 @@ if __name__ == '__main__':
     sample_rate_default = 16000
     # 原始音频位置目录：
     # origin_wavpath_default = "./data/VCTK-Corpus/wav48"
-    origin_wavpath_default = "./VCC2020-database-master/source" #
+    origin_wavpath_default = "/dataset/VCC2020-database-master/source" # 集群的数据集位置
     # 降采样生成的16kwav的目录：
     # target_wavpath_default = "./data/VCTK-Corpus/wav16"
-    target_wavpath_default = "./data/source/wav16" #
+    target_wavpath_default = "/processed_data/source/wav16" #
     # 处理完成的numpy一维数组的目录：（分别是训练集和测试集）
-    mc_dir_train_default = './data/mc/train'
-    mc_dir_test_default = './data/mc/test'
+    mc_dir_train_default = '/processed_data/mc/train'
+    mc_dir_test_default = '/processed_data/mc/test'
     # #############################################################################################
 
     parser.add_argument("--sample_rate", type = int, default = 16000, help = "Sample rate.")
