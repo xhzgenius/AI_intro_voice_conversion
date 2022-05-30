@@ -6,8 +6,35 @@ XHZGenius
 
 ### 写在前面
 
-其实英文好的同学看README.md就够了。但那里面没有各个模块的说明，那我简单解释一下。
+##### 训练命令：
 
+. ~/.bashrc (集群上需要这行)
+
+conda activate (环境名，集群上叫myenv)
+
+python ./i_vector_calculate/data_init.py
+
+python ./i_vector_calculate/extract_features.py
+
+python ./i_vector_calculate/gen_i_vector_by_xhz.py
+
+python ./preprocess.py
+
+python ./main.py
+
+转换命令：（把转换的文件放在指定地点）
+
+python ./i_vector_calculate/data_init.py
+
+python ./i_vector_calculate/extract_features.py
+
+python ./i_vector_calculate/gen_i_vector_by_xhz.py
+
+python preprocessForConvert.py
+
+python convert.py
+
+到时候UI就把源音频1放在./convertFolder/wav/p262，源音频2放在./convertFolder/wav/p272
 
 
 ##### 环境依赖

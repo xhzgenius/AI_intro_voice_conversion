@@ -20,6 +20,23 @@ import subprocess
 # 请叫我雷锋~
 # 要改参数的话请直接移步最下方的if __name__ == '__main__'部分。
 
+def i_vector(wavpath):
+    # cqy负责这个，到时候改掉，现在先填个0填充一下
+    return np.zeros(512)
+
+def save_i_vector(spk_fold_path, i_vector_dir):
+    # 我自己写的，把每个音频预计算一个i-vector
+    paths = glob.glob(join(spk_fold_path, '*.wav'))
+    spk_name = basename(spk_fold_path)
+    os.makedirs(join(i_vector_dir, spk_name), exist_ok=True) # 新建speaker名字的文件夹
+    for wav_file in tqdm(paths):
+        # wav_nam = basename(wav_file)
+        wav_nam = spk_name+"_"+basename(wav_file) #
+        result = i_vector(wav_nam)
+        np.save(join(i_vector_dir, spk_name, wav_nam.replace('.wav', '.npy')), result, allow_pickle=False)
+    
+    return 0
+
 def resample(spk, origin_wavpath, target_wavpath):
     '''预处理数据第一步：把一个文件夹内的所有wav转化为采样率16k的wav。
     
@@ -72,9 +89,13 @@ def split_data(paths):
     '''
     indices = np.arange(len(paths))
     test_size = 0.1
-    train_indices, test_indices = train_test_split(indices, test_size=test_size, random_state=1234)
-    train_paths = list(np.array(paths)[train_indices])
-    test_paths = list(np.array(paths)[test_indices])
+    try:
+        train_indices, test_indices = train_test_split(indices, test_size=test_size, random_state=1234)
+        train_paths = list(np.array(paths)[train_indices])
+        test_paths = list(np.array(paths)[test_indices])
+    except:
+        train_paths = paths
+        test_paths = []
     return train_paths, test_paths
 
 def get_spk_world_feats(spk_fold_path, mc_dir_train, mc_dir_test, sample_rate=16000):
@@ -87,6 +108,8 @@ def get_spk_world_feats(spk_fold_path, mc_dir_train, mc_dir_test, sample_rate=16
         生成的.npz文件好像对于训练本身没用，只是在训练到中间的时候输出几个中间结果到samples文件夹，给你看看训练成果。）
     '''
     paths = glob.glob(join(spk_fold_path, '*.wav'))
+    if len(paths)==0:
+        return
     spk_name = basename(spk_fold_path)
     train_paths, test_paths = split_data(paths)
     f0s = []
@@ -106,15 +129,15 @@ def get_spk_world_feats(spk_fold_path, mc_dir_train, mc_dir_test, sample_rate=16
     
     # 下面两行，是真的在预处理数据，就是把wav文件转化成numpy一维数组，存到（默认为./data/mc）文件夹下面。
     for wav_file in tqdm(train_paths):
-        # wav_nam = basename(wav_file)
-        wav_nam = spk_name+"_"+basename(wav_file) #
+        wav_nam = basename(wav_file)
+        # wav_nam = spk_name+"_"+basename(wav_file) #
         f0, timeaxis, sp, ap, coded_sp = world_encode_wav(wav_file, fs=sample_rate)
         normed_coded_sp = normalize_coded_sp(coded_sp, coded_sps_mean, coded_sps_std)
         np.save(join(mc_dir_train, wav_nam.replace('.wav', '.npy')), normed_coded_sp, allow_pickle=False)
     
     for wav_file in tqdm(test_paths):
-        # wav_nam = basename(wav_file)
-        wav_nam = spk_name+"_"+basename(wav_file) #
+        wav_nam = basename(wav_file)
+        # wav_nam = spk_name+"_"+basename(wav_file) #
         f0, timeaxis, sp, ap, coded_sp = world_encode_wav(wav_file, fs=sample_rate)
         normed_coded_sp = normalize_coded_sp(coded_sp, coded_sps_mean, coded_sps_std)
         np.save(join(mc_dir_test, wav_nam.replace('.wav', '.npy')), normed_coded_sp, allow_pickle=False)
@@ -131,13 +154,14 @@ if __name__ == '__main__':
     sample_rate_default = 16000
     # 原始音频位置目录：
     # origin_wavpath_default = "./data/VCTK-Corpus/wav48"
-    origin_wavpath_default = "/dataset/VCC2020-database-master/source" # 集群的数据集位置
+    origin_wavpath_default = "/dataset/VCTK-Corpus/newByXHZ" #
     # 降采样生成的16kwav的目录：
     # target_wavpath_default = "./data/VCTK-Corpus/wav16"
     target_wavpath_default = "/processed_data/source/wav16" #
     # 处理完成的numpy一维数组的目录：（分别是训练集和测试集）
     mc_dir_train_default = '/processed_data/mc/train'
     mc_dir_test_default = '/processed_data/mc/test'
+    i_vector_dir_default = "/processed_data/i_vector"
     # #############################################################################################
 
     parser.add_argument("--sample_rate", type = int, default = 16000, help = "Sample rate.")
@@ -145,6 +169,7 @@ if __name__ == '__main__':
     parser.add_argument("--target_wavpath", type = str, default = target_wavpath_default, help = "The original wav path to resample.")
     parser.add_argument("--mc_dir_train", type = str, default = mc_dir_train_default, help = "The directory to store the training features.")
     parser.add_argument("--mc_dir_test", type = str, default = mc_dir_test_default, help = "The directory to store the testing features.")
+    parser.add_argument("--i_vector_dir", type = str, default = i_vector_dir_default, help = "The directory to store the training i-vectors.")
     parser.add_argument("--num_workers", type = int, default = None, help = "The number of cpus to use.")
 
     argv = parser.parse_args()
@@ -154,6 +179,7 @@ if __name__ == '__main__':
     target_wavpath = argv.target_wavpath
     mc_dir_train = argv.mc_dir_train
     mc_dir_test = argv.mc_dir_test
+    i_vector_dir = argv.i_vector_dir
     num_workers = argv.num_workers if argv.num_workers is not None else cpu_count()
     # 上面都是在解析命令行，不用管他
 
@@ -164,12 +190,14 @@ if __name__ == '__main__':
     # WE only use 10 speakers listed below for this experiment.
     # speaker_used = ['262', '272', '229', '232', '292', '293', '360', '361', '248', '251']
     # speaker_used = ['p'+i for i in speaker_used]
-    speaker_used = ["SEF1", "SEF2", "SEM1", "SEM2"]
+    speaker_used = os.listdir(target_wavpath) # 尼玛的，写代码的人写这个不就行了，一劳永逸
+    print("Speaker used:", speaker_used)
 
     ## Next we are to extract the acoustic features (MCEPs, lf0) and compute the corresponding stats (means, stds). 
     # Make dirs to contain the MCEPs
     os.makedirs(mc_dir_train, exist_ok=True)
     os.makedirs(mc_dir_test, exist_ok=True)
+    os.makedirs(i_vector_dir, exist_ok=True)
 
     # 这个num_workers大概是要用的子进程数量orz
     num_workers = len(speaker_used) #cpu_count()
@@ -187,6 +215,14 @@ if __name__ == '__main__':
         spk_path = os.path.join(work_dir, spk)
         futures.append(executor.submit(partial(get_spk_world_feats, spk_path, mc_dir_train, mc_dir_test, sample_rate)))
     result_list = [future.result() for future in tqdm(futures)]
-    print(result_list)
+    print("====== Preprocess step 2 complete. ", result_list)
+    
+    # # 第三步：对每个wav，生成一个i-vector，存到新的目录（让另一个py来干这个事情）
+    # futures = []
+    # for spk in speaker_used:
+    #     spk_path = os.path.join(work_dir, spk)
+    #     futures.append(executor.submit(partial(save_i_vector, spk_path, i_vector_dir)))
+    # result_list = [future.result() for future in tqdm(futures)]
+    # print("====== Preprocess step 3 complete. ", result_list)
     sys.exit(0)
 
