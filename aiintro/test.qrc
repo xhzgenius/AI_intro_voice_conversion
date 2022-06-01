@@ -1,1 +1,16 @@
-<RCC/>
+<RCC>
+    <qresource prefix="/">
+        <file>art/bg.jpg</file>
+        <file>art/边框 2.png</file>
+        <file>art/边框.png</file>
+        <file>art/大图标 2.png</file>
+        <file>art/大图标.png</file>
+        <file>art/小图标1 2.png</file>
+        <file>art/小图标1.png</file>
+        <file>art/小图标2 2.png</file>
+        <file>art/小图标2.png</file>
+        <file>art/小图标3 2.png</file>
+        <file>art/小图标3.png</file>
+        <file>art/mmm.GIF</file>
+    </qresource>
+</RCC>

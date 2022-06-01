@@ -22,3 +22,7 @@ FORMS    += mainwindow.ui
 
 RESOURCES += \
     test.qrc
+
+CONFIG += resources_big
+
+CONFIG+=gif

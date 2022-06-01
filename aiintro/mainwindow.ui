@@ -6,31 +6,39 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>988</width>
-    <height>632</height>
+    <width>1082</width>
+    <height>584</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">
+background-color: rgb(0, 0, 0);</string>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QPushButton" name="pushButton">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>80</y>
-      <width>241</width>
-      <height>101</height>
+      <x>0</x>
+      <y>160</y>
+      <width>221</width>
+      <height>81</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <family>隶书</family>
-      <pointsize>16</pointsize>
+      <family>Algerian</family>
+      <pointsize>9</pointsize>
       <weight>50</weight>
       <italic>false</italic>
       <bold>false</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Algerian&quot;;
+color: rgb(255, 201, 38);</string>
     </property>
     <property name="text">
      <string>Source Voice</string>
@@ -39,20 +47,24 @@
    <widget class="QPushButton" name="pushButton_2">
     <property name="geometry">
      <rect>
-      <x>40</x>
-      <y>260</y>
+      <x>0</x>
+      <y>350</y>
       <width>241</width>
-      <height>101</height>
+      <height>81</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <family>隶书</family>
-      <pointsize>16</pointsize>
+      <family>Algerian</family>
+      <pointsize>20</pointsize>
       <weight>50</weight>
       <italic>false</italic>
       <bold>false</bold>
      </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 20pt &quot;Algerian&quot;;
+color: rgb(255, 201, 38);</string>
     </property>
     <property name="text">
      <string>Target Voice</string>
@@ -61,11 +73,16 @@
    <widget class="QLabel" name="label">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>180</y>
+      <x>0</x>
+      <y>240</y>
       <width>211</width>
-      <height>41</height>
+      <height>31</height>
      </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">
+color: rgb(255, 255, 255);
+font: 9pt &quot;Algerian&quot;;</string>
     </property>
     <property name="text">
      <string>Waiting...</string>
@@ -77,10 +94,10 @@
    <widget class="QLabel" name="label_2">
     <property name="geometry">
      <rect>
-      <x>60</x>
-      <y>370</y>
-      <width>211</width>
-      <height>41</height>
+      <x>10</x>
+      <y>430</y>
+      <width>231</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="focusPolicy">
@@ -89,8 +106,13 @@
     <property name="layoutDirection">
      <enum>Qt::LeftToRight</enum>
     </property>
+    <property name="styleSheet">
+     <string notr="true">
+color: rgb(255, 255, 255);
+font: 9pt &quot;Algerian&quot;;</string>
+    </property>
     <property name="text">
-     <string>Waiting</string>
+     <string>Waiting...</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -99,59 +121,34 @@
    <widget class="QPushButton" name="pushButton_3">
     <property name="geometry">
      <rect>
-      <x>340</x>
-      <y>150</y>
-      <width>211</width>
-      <height>141</height>
+      <x>240</x>
+      <y>20</y>
+      <width>181</width>
+      <height>81</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <family>隶书</family>
-      <pointsize>20</pointsize>
+      <family>Algerian</family>
+      <pointsize>9</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
     </property>
     <property name="styleSheet">
-     <string notr="true"/>
+     <string notr="true">font: 9pt &quot;Algerian&quot;;
+color: rgb(255, 201, 38);</string>
     </property>
     <property name="text">
      <string>CHANGE!</string>
     </property>
    </widget>
-   <widget class="QTextBrowser" name="textBrowser">
-    <property name="geometry">
-     <rect>
-      <x>630</x>
-      <y>20</y>
-      <width>311</width>
-      <height>371</height>
-     </rect>
-    </property>
-    <property name="font">
-     <font>
-      <family>Californian FB</family>
-      <pointsize>14</pointsize>
-     </font>
-    </property>
-   </widget>
-   <widget class="QPushButton" name="pushButton_4">
-    <property name="geometry">
-     <rect>
-      <x>750</x>
-      <y>400</y>
-      <width>93</width>
-      <height>28</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Clear</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pushButton_5">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>220</y>
+      <x>50</x>
+      <y>280</y>
       <width>93</width>
       <height>28</height>
      </rect>
@@ -163,8 +160,8 @@
    <widget class="QPushButton" name="pushButton_6">
     <property name="geometry">
      <rect>
-      <x>120</x>
-      <y>410</y>
+      <x>80</x>
+      <y>460</y>
       <width>93</width>
       <height>28</height>
      </rect>
@@ -176,29 +173,185 @@
    <widget class="QPushButton" name="pushButton_7">
     <property name="geometry">
      <rect>
-      <x>300</x>
-      <y>330</y>
-      <width>321</width>
-      <height>251</height>
+      <x>480</x>
+      <y>380</y>
+      <width>131</width>
+      <height>61</height>
      </rect>
     </property>
     <property name="font">
      <font>
-      <family>隶书</family>
-      <pointsize>16</pointsize>
+      <family>Algerian</family>
+      <pointsize>9</pointsize>
+      <weight>50</weight>
+      <italic>false</italic>
+      <bold>false</bold>
      </font>
     </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Algerian&quot;;
+color: rgb(255, 201, 38);</string>
+    </property>
     <property name="text">
-     <string>PLAY RESULT</string>
+     <string>RESULT</string>
     </property>
    </widget>
+   <widget class="QWidget" name="widget_3" native="true">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>200</y>
+      <width>141</width>
+      <height>141</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image: url(:/art/小图标2 2.png);</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="widget_4" native="true">
+    <property name="geometry">
+     <rect>
+      <x>40</x>
+      <y>30</y>
+      <width>131</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image: url(:/art/小图标1 2.png);</string>
+    </property>
+   </widget>
+   <widget class="QWidget" name="widget_5" native="true">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>360</y>
+      <width>131</width>
+      <height>131</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image: url(:/art/小图标3 2.png);</string>
+    </property>
+   </widget>
+   <widget class="QTextBrowser" name="textBrowser">
+    <property name="geometry">
+     <rect>
+      <x>730</x>
+      <y>120</y>
+      <width>251</width>
+      <height>281</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Algerian</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-color: rgb(0, 0, 0);
+color: rgb(0, 0, 0);
+gridline-color: rgb(0, 0, 0);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::NoFrame</enum>
+    </property>
+   </widget>
+   <widget class="QFrame" name="frame">
+    <property name="geometry">
+     <rect>
+      <x>630</x>
+      <y>30</y>
+      <width>451</width>
+      <height>451</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-image: url(:/art/边框.png);</string>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::StyledPanel</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Raised</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_4">
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>470</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 9pt &quot;Algerian&quot;;
+color: rgb(255, 201, 38);</string>
+    </property>
+    <property name="text">
+     <string>Clear</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_3">
+    <property name="geometry">
+     <rect>
+      <x>410</x>
+      <y>350</y>
+      <width>211</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">
+color: rgb(255, 255, 255);
+font: 9pt &quot;Algerian&quot;;</string>
+    </property>
+    <property name="text">
+     <string>Waiting...</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pushButton_8">
+    <property name="geometry">
+     <rect>
+      <x>500</x>
+      <y>440</y>
+      <width>93</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Play</string>
+    </property>
+   </widget>
+   <zorder>pushButton</zorder>
+   <zorder>pushButton_2</zorder>
+   <zorder>label</zorder>
+   <zorder>label_2</zorder>
+   <zorder>pushButton_3</zorder>
+   <zorder>pushButton_5</zorder>
+   <zorder>pushButton_6</zorder>
+   <zorder>pushButton_7</zorder>
+   <zorder>widget_3</zorder>
+   <zorder>widget_4</zorder>
+   <zorder>widget_5</zorder>
+   <zorder>frame</zorder>
+   <zorder>textBrowser</zorder>
+   <zorder>pushButton_4</zorder>
+   <zorder>label_3</zorder>
+   <zorder>pushButton_8</zorder>
   </widget>
   <widget class="QMenuBar" name="menuBar">
    <property name="geometry">
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>988</width>
+     <width>1082</width>
      <height>26</height>
     </rect>
    </property>
